@@ -33,10 +33,11 @@ spec:
             name: app-env-secret
         volumeMounts:
         - name: gcp-creds
-          mountPath: /app/hitech-citadel-965501da1a49.json
-          subPath: hitech-citadel-965501da1a49.json
+          mountPath: /app/gcp-credentials.json
+          subPath: credentials.json
           readOnly: true
       volumes:
       - name: gcp-creds
         secret:
           secretName: gcp-credentials
+          optional: true

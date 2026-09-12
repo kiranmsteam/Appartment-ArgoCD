@@ -23,6 +23,8 @@ resources:
 env:
   port: "8080"
   envName: "development"
-  googleSheetsCredentialsFile: "hitech-citadel-965501da1a49.json"
-  googleSheetBalanceId: "1Mi-75vRlh8NMTrtrZoe9ionJL3LLFPyULzVtWRgHohg"
-  googleSheetCrdrId: "1Gm8MZhpuaJHG7BGbxsm0uf2eNFSy-hLR4wTai67uRyY"
+  googleSheetsCredentialsFile: "gcp-credentials.json"
+  googleSheetBalanceId: "YOUR_BALANCE_SHEET_ID"
+  googleSheetContributionsId: "YOUR_CONTRIBUTIONS_SHEET_ID"
+  googleSheetCrdrId: "YOUR_CRDR_SHEET_ID"
+  googleSheetUsersId: "YOUR_USERS_SHEET_ID"
