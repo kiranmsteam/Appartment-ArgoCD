@@ -1,6 +1,22 @@
 # PowerShell script to start local Kubernetes cluster using Minikube
 $env:Path = "$PSScriptRoot\bin;" + $env:Path
 
+# Ensure script is running with Administrator privileges required for Hyper-V
+$identity = [Security.Principal.WindowsIdentity]::GetCurrent()
+$principal = New-Object Security.Principal.WindowsPrincipal($identity)
+if (-not $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+    Write-Host "Hyper-V driver requires Administrator privileges." -ForegroundColor Yellow
+    Write-Host "Attempting to launch elevated PowerShell window..." -ForegroundColor Cyan
+    try {
+        Start-Process powershell.exe -ArgumentList "-NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`"" -Verb RunAs
+        Write-Host "Launched elevated PowerShell window. Please accept the UAC prompt." -ForegroundColor Green
+        exit 0
+    } catch {
+        Write-Host "ERROR: Failed to elevate. Please right-click PowerShell and select 'Run as Administrator', then execute .\start-cluster.ps1" -ForegroundColor Red
+        exit 1
+    }
+}
+
 Write-Host "1. Checking Hyper-V Administrators Group Membership..." -ForegroundColor Cyan
 
 $username = $env:USERNAME
@@ -17,7 +33,10 @@ try {
     Write-Host "Note: Group check requires Administrator PowerShell window." -ForegroundColor Yellow
 }
 
-Write-Host "`n2. Starting Minikube Cluster..." -ForegroundColor Green
+Write-Host "`n2. Ensuring file permissions and Starting Minikube Cluster..." -ForegroundColor Green
+try {
+    icacls "$env:USERPROFILE\.minikube" /grant "${env:USERNAME}:(OI)(CI)F" /q 2>$null
+} catch {}
 & "$PSScriptRoot\bin\minikube.exe" start --driver=hyperv
 
 Write-Host "`n3. Checking Cluster Status..." -ForegroundColor Yellow
