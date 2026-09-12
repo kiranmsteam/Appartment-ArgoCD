@@ -17,11 +17,38 @@ try {
     Write-Host "Note: Group check requires Administrator PowerShell window." -ForegroundColor Yellow
 }
 
-Write-Host "`n2. Cleaning up any previous Minikube profile..." -ForegroundColor Cyan
-& "$PSScriptRoot\bin\minikube.exe" delete
-
-Write-Host "`n3. Starting Minikube Cluster..." -ForegroundColor Green
+Write-Host "`n2. Starting Minikube Cluster..." -ForegroundColor Green
 & "$PSScriptRoot\bin\minikube.exe" start --driver=hyperv
 
-Write-Host "`n4. Checking Cluster Status..." -ForegroundColor Yellow
+Write-Host "`n3. Checking Cluster Status..." -ForegroundColor Yellow
 & "$PSScriptRoot\bin\kubectl.exe" get nodes
+
+Write-Host "`n4. Ensuring Namespace and Secrets Exist..." -ForegroundColor Cyan
+& "$PSScriptRoot\bin\kubectl.exe" create namespace apartment-app --dry-run=client -o yaml | & "$PSScriptRoot\bin\kubectl.exe" apply -f -
+
+# Auto-provision GCP credentials secret if missing
+$gcpSecret = & "$PSScriptRoot\bin\kubectl.exe" get secret gcp-credentials -n apartment-app --ignore-not-found
+if (-not $gcpSecret) {
+    Write-Host "Creating gcp-credentials secret..." -ForegroundColor Yellow
+    & "$PSScriptRoot\bin\kubectl.exe" create secret generic gcp-credentials --from-file=credentials.json="$PSScriptRoot\app\hitech-citadel-965501da1a49.json" -n apartment-app
+}
+
+# Auto-provision app-env-secret if missing
+$appSecret = & "$PSScriptRoot\bin\kubectl.exe" get secret app-env-secret -n apartment-app --ignore-not-found
+if (-not $appSecret) {
+    Write-Host "Creating app-env-secret..." -ForegroundColor Yellow
+    & "$PSScriptRoot\bin\kubectl.exe" create secret generic app-env-secret -n apartment-app `
+      --from-literal=EMAIL_APP_PASSWORD="eahw azzc spem bqek" `
+      --from-literal=EMAIL_SENDER="hitechcitadel13@gmail.com" `
+      --from-literal=GOOGLE_SHEET_BALANCE_ID="1Mi-75vRlh8NMTrtrZoe9ionJL3LLFPyULzVtWRgHohg" `
+      --from-literal=GOOGLE_SHEET_CONTRIBUTIONS_ID="1612Fin2ii6cfL_BkeLhIcplcTfZgj42Yy-zXFo7FLCk" `
+      --from-literal=GOOGLE_SHEET_CRDR_ID="1Gm8MZhpuaJHG7BGbxsm0uf2eNFSy-hLR4wTai67uRyY" `
+      --from-literal=GOOGLE_SHEET_USERS_ID="1TGPCcz0WsM8-JZvtsubAwlyWd9TiQvwlaYkMhAM5azY" `
+      --from-literal=SECRET_KEY="8643715616" `
+      --from-literal=GOOGLE_SHEETS_CREDENTIALS_FILE="gcp-credentials.json"
+}
+
+Write-Host "`n5. Ensuring ArgoCD Application Manifest is Applied..." -ForegroundColor Green
+& "$PSScriptRoot\bin\kubectl.exe" apply -f "$PSScriptRoot\argocd\application.yaml"
+& "$PSScriptRoot\bin\kubectl.exe" apply -f "$PSScriptRoot\k8s\deployment.yaml" -f "$PSScriptRoot\k8s\service.yaml" -f "$PSScriptRoot\k8s\namespace.yaml"
+
