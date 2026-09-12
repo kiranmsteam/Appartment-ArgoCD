@@ -5,6 +5,8 @@ bin/
 __pycache__/
 *.pyc
 .env
+*.env
+Apartment.env
 *.log
 *.json
 
