@@ -1,0 +1,213 @@
+{% extends 'base.html' %}
+{% block title %}Admin – Payments & Expenditure{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h2><i class="fas fa-money-bill-wave"></i> Payments & Expenditure</h2>
+</div>
+
+{# Build a JS map of apartment → [names] from the reference sheet credit list #}
+<script>
+const creditRefsByApt = {{ credit_refs_by_apt | tojson }};
+</script>
+
+<div class="card-row">
+  <!-- Enter Payment -->
+  <div class="card flex-1">
+    <div class="card-header text-green"><i class="fas fa-plus-circle"></i> Record Payment Received</div>
+    <div class="card-body">
+      <form method="post">
+        <input type="hidden" name="action" value="payment" />
+        <div class="form-group">
+          <label>Apartment</label>
+          <select name="apartment" id="pay-apartment" required onchange="updatePaymentNames()">
+            <option value="">— Select —</option>
+            {% for apt in apartments %}
+            <option value="{{ apt }}">{{ apt }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Owner Name / Reference</label>
+          <input type="text" name="name" id="pay-name" placeholder="Name or transaction ref" list="pay-name-list" autocomplete="off" oninput="updateApartmentFromName()" />
+          <datalist id="pay-name-list">
+          </datalist>
+        </div>
+        <div class="form-group">
+          <label>Month</label>
+          <select name="month">
+            {% for m in ['January','February','March','April','May','June','July','August','September','October','November','December'] %}
+            <option>{{ m }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Year</label>
+          <select name="year">
+            {% for y in year_choices %}
+            <option value="{{ y }}" {% if y == current_year %}selected{% endif %}>{{ y }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Date</label>
+          <input type="date" name="date" />
+        </div>
+        <div class="form-group">
+          <label>Amount (Credit ₹)</label>
+          <input type="number" name="credit" step="0.01" min="0" placeholder="0.00" required />
+        </div>
+        <div class="form-group">
+          <label>Notes</label>
+          <input type="text" name="notes" placeholder="Optional notes" />
+        </div>
+        <button type="submit" class="btn btn-success btn-block"><i class="fas fa-save"></i> Save Payment</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Enter Expenditure -->
+  <div class="card flex-1">
+    <div class="card-header text-red"><i class="fas fa-minus-circle"></i> Record Expenditure</div>
+    <div class="card-body">
+      <form method="post">
+        <input type="hidden" name="action" value="expenditure" />
+        <div class="form-group">
+          <label>Reference</label>
+          <select name="apartment">
+            <option value="GENERAL">GENERAL</option>
+            {% for ref in debit_refs %}
+            <option value="{{ ref }}">{{ ref }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Description</label>
+          <input type="text" name="name" id="exp-desc" placeholder="e.g. Security, BESCOM bill" required
+                 list="exp-desc-list" autocomplete="off" />
+          <datalist id="exp-desc-list">
+            {% for cat in debit_refs %}
+            <option value="{{ cat }}">{{ cat }}</option>
+            {% endfor %}
+          </datalist>
+        </div>
+        <div class="form-group">
+          <label>Month</label>
+          <select name="month">
+            {% for m in ['January','February','March','April','May','June','July','August','September','October','November','December'] %}
+            <option>{{ m }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Year</label>
+          <select name="year">
+            {% for y in year_choices %}
+            <option value="{{ y }}" {% if y == current_year %}selected{% endif %}>{{ y }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Date</label>
+          <input type="date" name="date" />
+        </div>
+        <div class="form-group">
+          <label>Amount (Debit ₹)</label>
+          <input type="number" name="debit" step="0.01" min="0" placeholder="0.00" required />
+        </div>
+        <div class="form-group">
+          <label>Notes</label>
+          <input type="text" name="notes" placeholder="Optional notes" />
+        </div>
+        <div class="form-group" style="display:flex;align-items:center;gap:0.5rem;">
+          <input type="checkbox" name="is_cash" id="is-cash" style="width:auto;margin:0;" />
+          <label for="is-cash" style="margin:0;font-weight:600;">Cash Expense</label>
+        </div>
+        <button type="submit" class="btn btn-danger btn-block"><i class="fas fa-save"></i> Save Expenditure</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Recent entries -->
+{% if payments %}
+<div class="card mt-3">
+  <div class="card-header"><i class="fas fa-list"></i> Recent Manual Entries ({{ payments|length }})</div>
+  <div class="table-responsive">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Type</th><th>Date</th><th>Month</th><th>Apartment</th>
+          <th>Description</th><th class="text-right">Credit (₹)</th>
+          <th class="text-right">Debit (₹)</th><th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in payments|reverse %}
+        <tr>
+          <td>
+            {% if p.type == 'payment' %}
+            <span class="badge badge-green">Payment</span>
+            {% elif p.is_cash %}
+            <span class="badge badge-red">Cash Expense</span>
+            {% else %}
+            <span class="badge badge-red">Expense</span>
+            {% endif %}
+          </td>
+          <td>{{ p.date or '—' }}</td>
+          <td>{{ p.month_sheet if p.month_sheet else (p.month ~ (' ' ~ p.year if p.year else '')) }}</td>
+          <td>{{ p.apartment }}</td>
+          <td>{{ p.name }}</td>
+          <td class="text-right text-green">{% if p.credit %}₹{{ "{:,.0f}".format(p.credit) }}{% else %}—{% endif %}</td>
+          <td class="text-right text-red">{% if p.debit %}₹{{ "{:,.0f}".format(p.debit) }}{% else %}—{% endif %}</td>
+          <td>
+            <form method="post" action="{{ url_for('delete_payment', payment_id=p.id) }}"
+                  onsubmit="return confirm('Delete this entry?')">
+              <button type="submit" class="btn btn-sm btn-danger"><i class="fas fa-trash"></i></button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+
+<script>
+function updatePaymentNames() {
+  var apt = document.getElementById('pay-apartment').value;
+  var nameInput = document.getElementById('pay-name');
+  var datalist = document.getElementById('pay-name-list');
+  datalist.innerHTML = '';
+  var names = apt && creditRefsByApt[apt] ? creditRefsByApt[apt] : Object.values(creditRefsByApt).flat();
+  names.forEach(function(name) {
+    var opt = document.createElement('option');
+    opt.value = name;
+    datalist.appendChild(opt);
+  });
+  if (apt && creditRefsByApt[apt] && creditRefsByApt[apt].length === 1) {
+    nameInput.value = creditRefsByApt[apt][0];
+  }
+}
+
+// Build reverse map: owner name (lowercase) → apartment code
+const nameToApt = {};
+Object.entries(creditRefsByApt).forEach(function([apt, names]) {
+  names.forEach(function(name) {
+    nameToApt[name.toLowerCase()] = apt;
+  });
+});
+
+function updateApartmentFromName() {
+  var typed = document.getElementById('pay-name').value.trim().toLowerCase();
+  var aptSelect = document.getElementById('pay-apartment');
+  if (typed && nameToApt[typed]) {
+    aptSelect.value = nameToApt[typed];
+    updatePaymentNames();
+  }
+}
+
+document.addEventListener('DOMContentLoaded', updatePaymentNames);
+</script>
+{% endblock %}
+

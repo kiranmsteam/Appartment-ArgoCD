@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+{% block title %}Admin Dashboard{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h2><i class="fas fa-tachometer-alt"></i> Admin Dashboard</h2>
+  <p class="text-muted">Hitech Citadel Phase 2 – Management Portal</p>
+</div>
+
+{% if available_fys %}
+<div class="fy-filter mb-3">
+  <label><i class="fas fa-calendar-alt"></i> Financial Year (Income &amp; Expense):</label>
+  <div class="btn-group">
+    {% for fy in available_fys %}
+    <a href="{{ url_for('admin_dashboard', fy=fy) }}"
+       class="btn btn-sm {% if fy == selected_fy %}btn-primary{% else %}btn-outline{% endif %}">
+      {{ fy }}
+    </a>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<div class="stats-grid">
+  <div class="stat-card stat-green">
+    <div class="stat-icon"><i class="fas fa-arrow-up"></i></div>
+    <div class="stat-info">
+      <h3>₹{{ "{:,.0f}".format(total_income) }}</h3>
+      <p>Total Income{% if selected_fy %} ({{ selected_fy }}){% endif %}</p>
+    </div>
+  </div>
+  <div class="stat-card stat-red">
+    <div class="stat-icon"><i class="fas fa-arrow-down"></i></div>
+    <div class="stat-info">
+      <h3>₹{{ "{:,.0f}".format(total_expense) }}</h3>
+      <p>Total Expense{% if selected_fy %} ({{ selected_fy }}){% endif %}</p>
+    </div>
+  </div>
+  <div class="stat-card {% if balance >= 0 %}stat-blue{% else %}stat-red{% endif %}">
+    <div class="stat-icon"><i class="fas fa-wallet"></i></div>
+    <div class="stat-info">
+      <h3>₹{{ "{:,.0f}".format(balance) }}</h3>
+      <p>Net Balance{% if selected_fy %} ({{ selected_fy }}){% endif %}</p>
+    </div>
+  </div>
+  <div class="stat-card stat-orange">
+    <div class="stat-icon"><i class="fas fa-bullhorn"></i></div>
+    <div class="stat-info">
+      <h3>{{ announcement_count }}</h3>
+      <p>Announcements</p>
+    </div>
+  </div>
+  <div class="stat-card stat-purple">
+    <div class="stat-icon"><i class="fas fa-list"></i></div>
+    <div class="stat-info">
+      <h3>{{ payment_count }}</h3>
+      <p>Manual Entries</p>
+    </div>
+  </div>
+</div>
+
+<div class="card-row">
+  <div class="card flex-1">
+    <div class="card-header"><i class="fas fa-th-large"></i> Quick Actions</div>
+    <div class="card-body quick-links">
+      <a href="{{ url_for('admin_payments') }}" class="quick-link">
+        <i class="fas fa-money-bill-wave"></i><span>Enter Payment</span>
+      </a>
+      <a href="{{ url_for('admin_payments') }}" class="quick-link">
+        <i class="fas fa-file-invoice-dollar"></i><span>Enter Expense</span>
+      </a>
+      <a href="{{ url_for('admin_transactions') }}" class="quick-link">
+        <i class="fas fa-exchange-alt"></i><span>All Transactions</span>
+      </a>
+      <a href="{{ url_for('admin_apartments') }}" class="quick-link">
+        <i class="fas fa-users"></i><span>Apartments</span>
+      </a>
+      <a href="{{ url_for('admin_announcements') }}" class="quick-link">
+        <i class="fas fa-bullhorn"></i><span>Post Notice</span>
+      </a>
+      <a href="{{ url_for('admin_upload') }}" class="quick-link">
+        <i class="fas fa-upload"></i><span>Upload Sheet</span>
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}

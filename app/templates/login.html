@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% block title %}Login – Hitech Citadel Phase 2{% endblock %}
+{% block content %}
+<div class="auth-wrapper">
+  <div class="auth-card">
+    <div class="auth-header">
+      <i class="fas fa-building fa-3x"></i>
+      <h1>Hitech Citadel Phase 2</h1>
+      <p>Flat Owners Association</p>
+    </div>
+    <form method="post" class="auth-form">
+      <div class="form-group">
+        <label for="username"><i class="fas fa-door-open"></i> Apartment No / Username</label>
+        <input type="text" id="username" name="username" placeholder="e.g. RG1 or admin"
+               required autocomplete="username" />
+      </div>
+      <div class="form-group">
+        <label for="password"><i class="fas fa-lock"></i> Password</label>
+        <input type="password" id="password" name="password" placeholder="Password"
+               required autocomplete="current-password" />
+      </div>
+      <button type="submit" class="btn btn-primary btn-block">
+        <i class="fas fa-sign-in-alt"></i> Login
+      </button>
+    </form>
+    <p style="text-align:center; margin-top:1rem;">
+      <a href="{{ url_for('forgot_password') }}">Forgot password?</a>
+    </p>
+
+  </div>
+</div>
+{% endblock %}

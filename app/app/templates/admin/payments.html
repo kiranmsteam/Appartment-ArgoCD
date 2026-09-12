@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+{% block title %}Payments – Apartment Manager{% endblock %}
+{% block page_title %}Record Payment{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <!-- Form -->
+    <div class="col-lg-5">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fa-solid fa-money-bill-wave me-2 text-success"></i>Record New Payment</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('admin.payments') }}">
+                    <div class="mb-3">
+                        <label class="form-label">Apartment Number <span class="text-danger">*</span></label>
+                        <select class="form-select" name="apartment_number" required>
+                            <option value="">Select apartment</option>
+                            {% for apt in apartment_numbers %}
+                            <option value="{{ apt }}">{{ apt }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Amount (₹) <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control" name="amount"
+                               placeholder="2000" min="0" step="0.01" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Payment Date <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" name="payment_date"
+                               value="{{ today.strftime('%Y-%m-%d') }}" required>
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label class="form-label">Month <span class="text-danger">*</span></label>
+                            <select class="form-select" name="month" required>
+                                {% for m in range(1,13) %}
+                                <option value="{{ m }}" {% if m == today.month %}selected{% endif %}>
+                                    {{ ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][m-1] }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">Year <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" name="year"
+                                   value="{{ today_year }}" min="2020" max="2030" required>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label">Notes</label>
+                        <textarea class="form-control" name="notes" rows="2"
+                                  placeholder="Optional notes"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-success w-100 fw-semibold">
+                        <i class="fa-solid fa-check me-2"></i>Record Payment
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Payments -->
+    <div class="col-lg-7">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5><i class="fa-solid fa-clock-rotate-left me-2"></i>Recent Payments</h5>
+                <a href="{{ url_for('admin.transactions') }}" class="btn btn-sm btn-outline-secondary">
+                    All Transactions
+                </a>
+            </div>
+            <div class="card-body p-0">
+                {% if payments %}
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Apartment</th>
+                                <th>Amount</th>
+                                <th>Date</th>
+                                <th>Month/Year</th>
+                                <th>Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for p in payments %}
+                            <tr>
+                                <td><span class="badge bg-primary">{{ p.apartment_number }}</span></td>
+                                <td class="text-success fw-semibold">₹{{ '{:,.0f}'.format(p.amount) }}</td>
+                                <td>{{ p.payment_date.strftime('%d %b %Y') }}</td>
+                                <td class="text-muted small">{{ p.month }}/{{ p.year }}</td>
+                                <td class="text-muted small">{{ p.notes or '—' }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-5 text-muted">
+                    <i class="fa-solid fa-inbox fa-3x mb-3"></i>
+                    <p>No payments recorded yet.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

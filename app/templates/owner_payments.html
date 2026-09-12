@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% block title %}My Payment History{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h2><i class="fas fa-history"></i> My Payment History</h2>
+  <p class="text-muted">Flat: <strong>{{ session.user.flat }}</strong></p>
+</div>
+
+<!-- Monthly contribution summary -->
+<div class="card mb-3">
+  <div class="card-header">
+    <i class="fas fa-calendar-alt"></i> FY {{ selected_fy }} Monthly Contributions
+    {% if last_updated %}
+    <span class="text-muted" style="font-size:.85em;font-weight:normal">(last updated: {{ last_updated }})</span>
+    {% endif %}
+    {% if available_fys and available_fys|length > 1 %}
+    <span style="float:right">
+      <select class="form-control-sm" onchange="location.href='{{ url_for('owner_payments') }}?fy='+this.value">
+        {% for fy in available_fys %}
+        <option value="{{ fy }}" {% if fy == selected_fy %}selected{% endif %}>FY {{ fy }}</option>
+        {% endfor %}
+      </select>
+    </span>
+    {% endif %}
+  </div>
+  <div class="card-body">
+    <div class="month-grid">
+      {% set months_display = ['April','May','June','July','August','Sep','Oct','Nov','Dec','Jan','Feb','Mar'] %}
+      {% set months_keys   = ['April','May','June','July','August','Sep','Oct','Nov','DEC','JAN','FEB','MAR'] %}
+      {% for i in range(12) %}
+      {% set val = contributions.get(months_keys[i]) if contributions else None %}
+      <div class="month-tile {% if val and val > 0 %}paid{% else %}unpaid{% endif %}">
+        <span class="month-name">{{ months_display[i] }}</span>
+        <span class="month-amount">{% if val and val > 0 %}₹{{ "{:,.0f}".format(val) }}{% else %}—{% endif %}</span>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<!-- Transaction history -->
+<div class="table-responsive">
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>Month</th>
+        <th>Date</th>
+        <th>Description</th>
+        <th class="text-right">Debit (₹)</th>
+        <th class="text-right">Credit (₹)</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% if history %}
+      {% for tx in history %}
+      <tr>
+        <td>{{ tx.month }}</td>
+        <td>{{ tx.date or '—' }}</td>
+        <td>{{ tx.name or '—' }}</td>
+        <td class="text-right text-red">{% if tx.debit %}{{ "{:,.0f}".format(tx.debit) }}{% else %}—{% endif %}</td>
+        <td class="text-right text-green">{% if tx.credit %}{{ "{:,.0f}".format(tx.credit) }}{% else %}—{% endif %}</td>
+      </tr>
+      {% endfor %}
+      {% else %}
+      <tr><td colspan="5" class="text-center text-muted">No transactions recorded yet for your apartment.</td></tr>
+      {% endif %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

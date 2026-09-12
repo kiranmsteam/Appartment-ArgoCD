@@ -1,0 +1,20 @@
+# Ignore downloaded CLI binaries
+bin/
+
+# Python & Environment ignores
+__pycache__/
+*.pyc
+.env
+*.log
+*.json
+
+# Secrets & Credentials
+*service-account*.json
+hitech-citadel-*.json
+*.key
+*.pem
+
+# OS & Editor files
+.DS_Store
+.vscode/
+.idea/

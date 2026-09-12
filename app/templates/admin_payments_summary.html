@@ -1,0 +1,267 @@
+{% extends 'base.html' %}
+{% block title %}Apartment Payments Master Summary{% endblock %}
+{% block content %}
+<style>
+  .cell-paid {
+    background-color: #dcfce7 !important;
+    color: #166534 !important;
+    font-weight: bold;
+    text-align: center;
+  }
+  .cell-partial {
+    background-color: #fef3c7 !important;
+    color: #92400e !important;
+    font-weight: bold;
+    text-align: center;
+  }
+  .cell-unpaid {
+    background-color: #fee2e2 !important;
+    color: #991b1b !important;
+    text-align: center;
+    color: #991b1b;
+  }
+  .summary-table th {
+    text-align: center;
+    font-size: 0.85em;
+    padding: 8px 4px;
+  }
+  .summary-table td {
+    padding: 8px 4px;
+    font-size: 0.9em;
+  }
+  .summary-table .text-left-align {
+    text-align: left !important;
+  }
+  .search-container {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 20px;
+  }
+  .info-note {
+    background: #eff6ff;
+    border-left: 4px solid #3b82f6;
+    color: #1e3a8a;
+    padding: 12px;
+    border-radius: 4px;
+    margin-bottom: 20px;
+    font-size: 0.9em;
+  }
+  @media (max-width: 768px) {
+    .summary-table th, .summary-table td {
+      padding: 6px 2px !important;
+      font-size: 0.78em !important;
+    }
+    .summary-table th:first-child,
+    .summary-table td:first-child {
+      position: sticky;
+      left: 0;
+      background-color: #f8fafc !important;
+      z-index: 5;
+      border-right: 2px solid #cbd5e1 !important;
+      box-shadow: 2px 0 4px rgba(0,0,0,0.1);
+    }
+    .summary-table td:first-child {
+      background-color: #ffffff !important;
+    }
+  }
+
+  /* ── Print Media Query ────────────────────────────────────────── */
+  @media print {
+    *, *::before, *::after {
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+    
+    header, nav, .navbar, .no-print, .search-container, .info-note, .page-header p {
+      display: none !important;
+    }
+    
+    body, .container, .main-content {
+      background: #ffffff !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      box-shadow: none !important;
+    }
+
+    .page-header {
+      margin-bottom: 10px !important;
+      text-align: center;
+    }
+    .page-header h2 {
+      font-size: 1.2rem !important;
+      margin: 0 !important;
+    }
+    
+    .card {
+      border: 1px solid #cbd5e1 !important;
+      box-shadow: none !important;
+      margin-bottom: 0 !important;
+      border-radius: 4px !important;
+    }
+    
+    .card-header {
+      background: #f1f5f9 !important;
+      padding: 6px 10px !important;
+      font-size: 0.9rem !important;
+    }
+    
+    /* Force FY 2026-27 to start on Page 2 */
+    .card-fy-2026-27 {
+      page-break-before: always !important;
+      break-before: page !important;
+      margin-top: 15px !important;
+    }
+
+    /* Standalone page print modes */
+    body.print-only-2025-26 .card-fy-2026-27 {
+      display: none !important;
+    }
+    body.print-only-2026-27 .card-fy-2025-26 {
+      display: none !important;
+    }
+    body.print-only-2026-27 .card-fy-2026-27 {
+      page-break-before: auto !important;
+      break-before: auto !important;
+    }
+    
+    .table-responsive {
+      overflow: visible !important;
+    }
+    .summary-table {
+      font-size: 7.5pt !important;
+      width: 100% !important;
+      border-collapse: collapse !important;
+    }
+    .summary-table th, .summary-table td {
+      padding: 3px 2px !important;
+      border: 1px solid #94a3b8 !important;
+    }
+    .summary-table th:first-child,
+    .summary-table td:first-child {
+      position: static !important;
+      box-shadow: none !important;
+    }
+    .col-summary-extra {
+      display: none !important;
+    }
+  }
+</style>
+
+<div class="page-header">
+  <h2><i class="fas fa-table"></i> Master Payments Summary Matrix</h2>
+  <p class="text-muted">A sequential pool allocation audit for all flats from April 2025 to present date</p>
+</div>
+
+<div class="info-note no-print">
+  <i class="fas fa-info-circle"></i> This page is excluded from the main navigation menu. Bookmark this URL (`/admin/payments-summary`) to return here at any time.
+</div>
+
+<!-- Print Action Toolbar -->
+<div class="print-toolbar no-print" style="margin-bottom: 20px; display: flex; gap: 10px; flex-wrap: wrap;">
+  <button onclick="printPage('all')" class="btn" style="background: #2563eb; color: #ffffff; border: none; padding: 8px 16px; border-radius: 6px; font-weight: bold; cursor: pointer;">
+    <i class="fas fa-print"></i> Print Both FYs (2 Pages)
+  </button>
+  <button onclick="printPage('2025-26')" class="btn" style="background: #ffffff; color: #0284c7; border: 1px solid #0284c7; padding: 8px 16px; border-radius: 6px; font-weight: bold; cursor: pointer;">
+    <i class="fas fa-file-pdf"></i> Print FY 2025-26 Only (Page 1)
+  </button>
+  <button onclick="printPage('2026-27')" class="btn" style="background: #ffffff; color: #0284c7; border: 1px solid #0284c7; padding: 8px 16px; border-radius: 6px; font-weight: bold; cursor: pointer;">
+    <i class="fas fa-file-pdf"></i> Print FY 2026-27 Only (Page 2)
+  </button>
+</div>
+
+<div class="search-container no-print">
+  <div class="form-group mb-0">
+    <label for="matrixSearch" style="font-weight: bold; margin-bottom: 5px; display: block;">
+      <i class="fas fa-search"></i> Quick Search / Filter:
+    </label>
+    <input type="text" id="matrixSearch" class="form-control" placeholder="Search by flat name, owner, block (e.g. KG4, Nayak, Lily)..." onkeyup="filterTables()">
+  </div>
+</div>
+
+{% set months_headers = ['Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'] %}
+
+{% for fy, rows in summary_data.items() %}
+<div class="card mb-4 card-fy-{{ fy }}">
+  <div class="card-header" style="background: #f1f5f9; font-weight: bold; display: flex; justify-content: space-between; align-items: center;">
+    <span><i class="fas fa-calendar-alt"></i> Financial Year {{ fy }}</span>
+    <span class="badge" style="background: #cbd5e1; color: #334155; font-size: 0.8em;">
+      Expected: {% if fy == '2025-26' %}Rs. 2,600/mo{% else %}Rs. 2,800/mo{% endif %}
+    </span>
+  </div>
+  <div class="card-body" style="padding: 0;">
+    <div class="table-responsive">
+      <table class="data-table summary-table" id="table-{{ fy }}" style="margin: 0; width: 100%;">
+        <thead>
+          <tr style="background: #f8fafc;">
+            <th class="text-left-align" style="width: 60px;">Flat</th>
+            <th class="text-left-align" style="width: 140px;">Owner</th>
+            {% for m in months_headers %}
+            <th style="width: 50px;">{{ m }}</th>
+            {% endfor %}
+            <th class="col-summary-extra" style="width: 90px;">Total Paid</th>
+            <th class="col-summary-extra" style="width: 90px;">Advance</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in rows %}
+          <tr class="flat-row">
+            <td class="text-left-align"><strong>{{ r.flat }}</strong> <span class="text-muted" style="font-size: 0.8em;">({{ r.block[0] }})</span></td>
+            <td class="text-left-align" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 140px;" title="{{ r.owner }}">
+              {{ r.owner }}
+            </td>
+            {% for m in r.months %}
+            <td class="cell-{{ m.status_class }}">
+              {% if m.allocated > 0 %}
+                {{ "{:,.0f}".format(m.allocated) }}
+              {% else %}
+                &mdash;
+              {% endif %}
+            </td>
+            {% endfor %}
+            <td class="col-summary-extra" style="font-weight: bold; color: #166534; text-align: right; padding-right: 8px;">
+              Rs. {{ "{:,.0f}".format(r.total_paid) }}
+            </td>
+            <td class="col-summary-extra" style="font-weight: bold; text-align: right; padding-right: 8px; {% if r.advance > 0 %}color: #166534; background-color: #f0fdf4;{% else %}color: #64748b;{% endif %}">
+              Rs. {{ "{:,.0f}".format(r.advance) }}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endfor %}
+
+<script>
+  function printPage(mode) {
+    document.body.classList.remove('print-only-2025-26', 'print-only-2026-27');
+    if (mode === '2025-26') {
+      document.body.classList.add('print-only-2025-26');
+    } else if (mode === '2026-27') {
+      document.body.classList.add('print-only-2026-27');
+    }
+    window.print();
+  }
+
+  function filterTables() {
+    var input = document.getElementById("matrixSearch");
+    var filter = input.value.toLowerCase().strip ? input.value.toLowerCase().strip() : input.value.toLowerCase();
+    
+    var rows = document.getElementsByClassName("flat-row");
+    for (var i = 0; i < rows.length; i++) {
+      var row = rows[i];
+      var text = row.innerText.toLowerCase();
+      if (text.indexOf(filter) > -1) {
+        row.style.display = "";
+      } else {
+        row.style.display = "none";
+      }
+    }
+  }
+</script>
+{% endblock %}

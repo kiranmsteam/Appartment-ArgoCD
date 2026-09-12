@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}Hitech Citadel Phase 2{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+        integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+</head>
+<body>
+  {% if session.user %}
+  <nav class="navbar">
+    <div class="nav-brand">
+      <i class="fas fa-building"></i>
+      <span>Hitech Citadel Phase&nbsp;2</span>
+    </div>
+    <div class="nav-links">
+      {% if session.user.role in ('admin', 'admin_viewer') %}
+        <a href="{{ url_for('admin_dashboard') }}"         {% if request.endpoint == 'admin_dashboard'      %}class="active"{% endif %}><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+        <a href="{{ url_for('admin_balance_sheet') }}"     {% if request.endpoint == 'admin_balance_sheet'  %}class="active"{% endif %}><i class="fas fa-chart-bar"></i> Balance Sheet</a>
+        <a href="{{ url_for('admin_payments') }}"          {% if request.endpoint == 'admin_payments'       %}class="active"{% endif %}><i class="fas fa-money-bill-wave"></i> Payments</a>
+        <a href="{{ url_for('admin_payments_till_date') }}" {% if request.endpoint == 'admin_payments_till_date' %}class="active"{% endif %}><i class="fas fa-calendar-check"></i> Payments Till Date</a>
+        <a href="{{ url_for('admin_transactions') }}"      {% if request.endpoint == 'admin_transactions'   %}class="active"{% endif %}><i class="fas fa-exchange-alt"></i> Transactions</a>
+        <a href="{{ url_for('admin_apartments') }}"        {% if request.endpoint == 'admin_apartments'     %}class="active"{% endif %}><i class="fas fa-users"></i> Apartments</a>
+        <a href="{{ url_for('admin_announcements') }}"     {% if request.endpoint == 'admin_announcements'  %}class="active"{% endif %}><i class="fas fa-bullhorn"></i> Announcements</a>
+        <a href="{{ url_for('admin_upload') }}"            {% if request.endpoint == 'admin_upload'         %}class="active"{% endif %}><i class="fas fa-upload"></i> Upload</a>
+        <a href="{{ url_for('admin_google_sheets_status') }}" {% if request.endpoint == 'admin_google_sheets_status' %}class="active"{% endif %} title="Google Sheets{% if google_sheets_active %} (active){% endif %}">
+          <i class="fas fa-table{% if google_sheets_active %} text-green{% endif %}"></i> G&nbsp;Sheets
+        </a>
+      {% else %}
+        <a href="{{ url_for('owner_dashboard') }}"         {% if request.endpoint == 'owner_dashboard'      %}class="active"{% endif %}><i class="fas fa-home"></i> Dashboard</a>
+        <a href="{{ url_for('owner_balance_sheet') }}"     {% if request.endpoint == 'owner_balance_sheet'  %}class="active"{% endif %}><i class="fas fa-chart-bar"></i> Balance Sheet</a>
+        <a href="{{ url_for('owner_payments') }}"          {% if request.endpoint == 'owner_payments'       %}class="active"{% endif %}><i class="fas fa-history"></i> Payments</a>
+        <a href="{{ url_for('owner_payments_till_date') }}" {% if request.endpoint == 'owner_payments_till_date' %}class="active"{% endif %}><i class="fas fa-calendar-check"></i> Payments Till Date</a>
+        <a href="{{ url_for('owner_announcements') }}"     {% if request.endpoint == 'owner_announcements'  %}class="active"{% endif %}><i class="fas fa-bell"></i> Announcements</a>
+      {% endif %}
+    </div>
+    <div class="nav-user">
+      <span><i class="fas fa-user-circle"></i>
+        {% if session.user.role in ('admin', 'admin_viewer') %}Admin{% else %}{{ session.user.flat }}{% endif %}
+      </span>
+      <a href="{{ url_for('change_password') }}" title="Change password"><i class="fas fa-key"></i></a>
+      <a href="{{ url_for('logout') }}" title="Logout"><i class="fas fa-sign-out-alt"></i> Logout</a>
+    </div>
+  </nav>
+  {% endif %}
+
+  <main class="container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }}">
+            <i class="fas fa-{% if category == 'success' %}check-circle{% elif category == 'danger' %}exclamation-circle{% elif category == 'warning' %}exclamation-triangle{% else %}info-circle{% endif %}"></i>
+            {{ message }}
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer>
+    <p>&copy; {{ now.year if now else 2025 }} Hitech Citadel Phase 2 Flat Owners Association</p>
+  </footer>
+</body>
+</html>

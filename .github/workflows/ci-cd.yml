@@ -1,0 +1,59 @@
+name: CI/CD Pipeline (Build, Push & GitOps Update)
+
+on:
+  push:
+    branches: [ "main" ]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository_owner }}/apartment-app
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract Metadata (Tags/Labels)
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=sha,format=short
+            type=raw,value=latest
+
+      - name: Build and Push Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./app  # Path to apartment application code
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+      - name: Update Kustomize Image Tag in GitOps Repo
+        run: |
+          IMAGE_TAG="sha-${GITHUB_SHA::7}"
+          cd k8s
+          sed -i "s/newTag:.*/newTag: ${IMAGE_TAG}/g" kustomization.yaml
+          sed -i "s|newName:.*|newName: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}|g" kustomization.yaml
+
+      - name: Commit and Push Manifest Changes
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add k8s/kustomization.yaml
+          git diff-index --quiet HEAD || git commit -m "ci: update image tag to sha-${GITHUB_SHA::7}"
+          git push

@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+{% block title %}Admin – Balance Sheet{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h2><i class="fas fa-chart-bar"></i> Balance Sheet Overview</h2>
+  <p class="text-muted">Latest to oldest — select a financial year to filter</p>
+</div>
+
+{% if available_fys %}
+<div class="fy-filter mb-3">
+  <label><i class="fas fa-calendar-alt"></i> Financial Year:</label>
+  <div class="btn-group">
+    {% for fy in available_fys %}
+    <a href="{{ url_for('admin_balance_sheet', fy=fy) }}"
+       class="btn btn-sm {% if fy == selected_fy %}btn-primary{% else %}btn-outline{% endif %}">
+      {{ fy }}
+    </a>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+{% if sheets %}
+<div class="card mb-3">
+  <div class="card-header"><i class="fas fa-table"></i> Monthly Summary — {{ selected_fy or 'All' }}</div>
+  <div class="table-responsive">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Month</th>
+          <th>FY</th>
+          <th class="text-right">Income (₹)</th>
+          <th class="text-right">Expense (₹)</th>
+          <th class="text-right">Net (₹)</th>
+          <th class="text-center">Detail</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for s in sheets %}
+        {% set net = s.income - s.expense %}
+        <tr>
+          <td><strong>{{ s.display_month }}</strong></td>
+          <td><span class="badge badge-blue">{{ s.fy }}</span></td>
+          <td class="text-right text-green">{{ "{:,.0f}".format(s.income) }}</td>
+          <td class="text-right text-red">{{ "{:,.0f}".format(s.expense) }}</td>
+          <td class="text-right {% if net >= 0 %}text-green{% else %}text-red{% endif %}">
+            {{ "{:,.0f}".format(net) }}
+          </td>
+          <td class="text-center">
+            {% if s.sheet_ref %}
+            <a href="{{ url_for('balance_sheet_detail', fy=s.fy, month_num=s.month_num) }}"
+               class="btn btn-sm btn-outline">
+              <i class="fas fa-eye"></i> View
+            </a>
+            {% else %}—{% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+      <tfoot>
+        <tr class="total-row">
+          <td colspan="2"><strong>Total (shown)</strong></td>
+          <td class="text-right text-green"><strong>₹{{ "{:,.0f}".format(sheets|sum(attribute='income')) }}</strong></td>
+          <td class="text-right text-red"><strong>₹{{ "{:,.0f}".format(sheets|sum(attribute='expense')) }}</strong></td>
+          {% set total_net = sheets|sum(attribute='income') - sheets|sum(attribute='expense') %}
+          <td class="text-right {% if total_net >= 0 %}text-green{% else %}text-red{% endif %}">
+            <strong>₹{{ "{:,.0f}".format(total_net) }}</strong>
+          </td>
+          <td></td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+</div>
+{% else %}
+<div class="empty-state">
+  <i class="fas fa-chart-bar fa-3x"></i>
+  <p>No balance sheet data available.</p>
+</div>
+{% endif %}
+{% endblock %}

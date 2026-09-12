@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% block title %}Owner Dashboard{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h2><i class="fas fa-home"></i> Welcome, {{ session.user.name }}</h2>
+  <p class="text-muted">Flat: <strong>{{ session.user.flat }}</strong> | Block: {{ session.user.block }}</p>
+</div>
+
+<div class="stats-grid">
+  <div class="stat-card stat-blue">
+    <div class="stat-icon"><i class="fas fa-calendar-check"></i></div>
+    <div class="stat-info">
+      <h3>{{ paid_months }}</h3>
+      <p>Months Paid</p>
+    </div>
+  </div>
+  <div class="stat-card stat-green">
+    <div class="stat-icon"><i class="fas fa-rupee-sign"></i></div>
+    <div class="stat-info">
+      <h3>₹{{ "{:,.0f}".format(total_paid) }}</h3>
+      <p>Total Paid (FY 2025–26)</p>
+    </div>
+  </div>
+  <div class="stat-card stat-orange">
+    <div class="stat-icon"><i class="fas fa-bell"></i></div>
+    <div class="stat-info">
+      <h3>{{ announcements|length }}</h3>
+      <p>Recent Notices</p>
+    </div>
+  </div>
+</div>
+
+<div class="card-row">
+  <div class="card flex-2">
+    <div class="card-header"><i class="fas fa-bell"></i> Recent Announcements</div>
+    <div class="card-body">
+      {% if announcements %}
+        {% for ann in announcements %}
+        <div class="announcement-item">
+          <div class="ann-title">{{ ann.title }}</div>
+          <div class="ann-meta"><i class="fas fa-calendar"></i> {{ ann.date }} | <i class="fas fa-user"></i> {{ ann.author }}</div>
+          <div class="ann-content">{{ ann.content }}</div>
+        </div>
+        {% endfor %}
+        <a href="{{ url_for('owner_announcements') }}" class="btn btn-sm btn-secondary">View All</a>
+      {% else %}
+        <p class="text-muted">No announcements yet.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="card flex-1">
+    <div class="card-header"><i class="fas fa-th-large"></i> Quick Links</div>
+    <div class="card-body quick-links">
+      <a href="{{ url_for('owner_balance_sheet') }}" class="quick-link">
+        <i class="fas fa-chart-bar"></i>
+        <span>Balance Sheet</span>
+      </a>
+      <a href="{{ url_for('owner_payments') }}" class="quick-link">
+        <i class="fas fa-history"></i>
+        <span>My Payments</span>
+      </a>
+      <a href="{{ url_for('owner_announcements') }}" class="quick-link">
+        <i class="fas fa-bullhorn"></i>
+        <span>Notices</span>
+      </a>
+      <a href="{{ url_for('change_password') }}" class="quick-link">
+        <i class="fas fa-key"></i>
+        <span>Change Password</span>
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}

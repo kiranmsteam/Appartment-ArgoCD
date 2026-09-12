@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Lint & smoke-test
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Import check (syntax + startup)
+        run: |
+          python - <<'EOF'
+          import importlib.util, sys
+          # Verify the app module loads without errors
+          spec = importlib.util.spec_from_file_location("app", "app.py")
+          mod  = importlib.util.module_from_spec(spec)
+          spec.loader.exec_module(mod)
+          # Basic sanity checks
+          assert hasattr(mod, 'app'), "Flask app object not found"
+          assert hasattr(mod, 'FY_CONFIG'), "FY_CONFIG not found"
+          fys = [fy for fy, *_ in mod.FY_CONFIG]
+          assert '2025-26' in fys, "FY 2025-26 missing"
+          assert '2026-27' in fys, "FY 2026-27 missing"
+          print("OK – app loaded, FY_CONFIG =", fys)
+          EOF
+
+      - name: Gunicorn dry-run (worker startup)
+        run: |
+          gunicorn --bind 0.0.0.0:5001 --workers 1 --timeout 10 app:app &
+          GUN_PID=$!
+          # Wait up to 20 s for the server to become ready
+          for i in $(seq 1 20); do
+            sleep 1
+            if curl -sf http://localhost:5001/login -o /dev/null -w "HTTP %{http_code}\n"; then
+              kill $GUN_PID; exit 0
+            fi
+          done
+          echo "Server did not start in time"
+          kill $GUN_PID; exit 1

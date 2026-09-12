@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% block title %}Admin – Apartments{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h2><i class="fas fa-users"></i> All Apartments ({{ apartments|length }})</h2>
+</div>
+
+<div class="table-filter mb-2">
+  <input type="text" id="aptSearch" placeholder="🔍 Search by flat, owner, block..." class="search-input" />
+</div>
+
+<div class="table-responsive">
+  <table class="data-table" id="aptTable">
+    <thead>
+      <tr>
+        <th>Flat</th><th>Block</th><th>Owner Name</th>
+        <th class="text-right">Total Paid FY25-26 (₹)</th>
+        <th>Status</th><th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for apt in apartments %}
+      <tr>
+        <td><span class="apt-badge">{{ apt.flat }}</span></td>
+        <td>{{ apt.block }}</td>
+        <td>{{ apt.owner }}</td>
+        <td class="text-right">₹{{ "{:,.0f}".format(apt.total_paid) }}</td>
+        <td>
+          {% if apt.must_change_password %}
+          <span class="badge badge-orange">Password Reset Pending</span>
+          {% else %}
+          <span class="badge badge-green">Active</span>
+          {% endif %}
+        </td>
+        <td>
+          <form method="post" action="{{ url_for('admin_reset_password', flat=apt.flat) }}"
+                onsubmit="return confirm('Reset password for {{ apt.flat }} to Welcome?')">
+            <button type="submit" class="btn btn-sm btn-warning">
+              <i class="fas fa-redo"></i> Reset
+            </button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<script>
+document.getElementById('aptSearch').addEventListener('input', function() {
+  var q = this.value.toLowerCase();
+  document.querySelectorAll('#aptTable tbody tr').forEach(function(row) {
+    row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+});
+</script>
+{% endblock %}

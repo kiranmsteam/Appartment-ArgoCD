@@ -1,0 +1,222 @@
+{% extends 'base.html' %}
+{% block title %}Admin – Google Sheets Status{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h2><i class="fas fa-table"></i> Google Sheets Integration Status</h2>
+</div>
+
+{% if configured %}
+<div class="alert alert-success">
+  <i class="fas fa-check-circle"></i>
+  <strong>Connected.</strong> The app is reading data from Google Sheets.
+</div>
+{% else %}
+<div class="alert alert-warning">
+  <i class="fas fa-exclamation-triangle"></i>
+  <strong>Not connected.</strong> The app is using local Excel files.
+  To switch to Google Sheets, set the environment variables below and restart the app.
+  See Step&nbsp;5 of the setup guide for exact instructions.
+</div>
+{% endif %}
+
+<div class="card mb-3">
+  <div class="card-header"><i class="fas fa-cog"></i> Environment Variables</div>
+  <div class="table-responsive">
+    <table class="data-table">
+      <thead>
+        <tr><th>Variable</th><th>Current value</th><th>Status</th></tr>
+      </thead>
+      <tbody>
+        {% for var, val in env_vars.items() %}
+        <tr>
+          <td><code>{{ var }}</code></td>
+          <td>
+            {% if val %}
+              <span style="font-family:monospace;font-size:.85em">{{ val[:80] }}{% if val|length > 80 %}…{% endif %}</span>
+            {% else %}
+              <span class="text-muted">— not set —</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if val %}
+              <span class="badge badge-green"><i class="fas fa-check"></i> Set</span>
+            {% else %}
+              <span class="badge badge-red"><i class="fas fa-times"></i> Missing</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% if diagnostics %}
+<div class="card mb-3">
+  <div class="card-header"><i class="fas fa-stethoscope"></i> Live Diagnostics — What the app can actually read</div>
+  <div class="card-body">
+    {% if not diagnostics.gspread_installed %}
+    <div class="alert alert-danger">
+      <i class="fas fa-times-circle"></i>
+      <strong>gspread / google-auth not installed.</strong>
+      Run: <code>pip install -r requirements.txt</code>
+    </div>
+    {% endif %}
+
+    {% for key, sheet in diagnostics.sheets.items() %}
+    <div class="card mb-2" style="border-left: 4px solid {% if sheet.excel_format %}#ff9800{% elif sheet.ok %}var(--success-color, #28a745){% else %}var(--danger-color, #dc3545){% endif %}">
+      <div class="card-header" style="background:transparent">
+        {% if sheet.excel_format %}
+          <i class="fas fa-exclamation-triangle" style="color:#ff9800"></i>
+        {% elif sheet.ok %}
+          <i class="fas fa-check-circle" style="color:#28a745"></i>
+        {% else %}
+          <i class="fas fa-times-circle" style="color:#dc3545"></i>
+        {% endif %}
+        <strong>{{ sheet.label }}</strong>
+        &nbsp;<code style="font-size:.8em;color:#666">{{ sheet.env_var }}</code>
+        {% if sheet.excel_format %}
+          &nbsp;<span class="badge" style="background:#ff9800;color:#fff;font-size:.75em">Excel format — read-only</span>
+        {% endif %}
+      </div>
+      <div class="card-body" style="padding:.75rem 1rem">
+
+        {% if sheet.excel_format %}
+        <div class="alert" style="background:#fff3e0;border:1px solid #ffcc80;color:#e65100;margin-bottom:.75rem;padding:.6rem .9rem;border-radius:4px;font-size:.9em">
+          <i class="fas fa-exclamation-triangle"></i>
+          <strong>This file is still in Excel (.xlsx) format.</strong>
+          Reading data works, but <strong>saving new transactions will fail</strong> with
+          <code>[400]: This operation is not supported for this document</code>.
+          <br><br>
+          <strong>Fix (takes &lt; 1 minute):</strong>
+          <ol style="margin:.4rem 0 0 1.2rem;padding:0">
+            <li>Open the spreadsheet in Google Sheets (the link in Drive).</li>
+            <li>Click <strong>File → Save as Google Sheets</strong>.</li>
+            <li>A new native Google Sheets file is created — copy its Spreadsheet ID from the URL.</li>
+            <li>Update <code>{{ sheet.env_var }}</code> in your startup script to the new ID and restart the app.</li>
+          </ol>
+        </div>
+        {% endif %}
+
+        {% if sheet.error %}
+        <div class="alert alert-danger" style="margin-bottom:.5rem;padding:.5rem .75rem;font-size:.9em">
+          <i class="fas fa-exclamation-triangle"></i> <strong>Error:</strong> {{ sheet.error }}
+        </div>
+        {% endif %}
+
+        {% if sheet.summary %}
+        <p style="margin-bottom:.5rem"><i class="fas fa-info-circle"></i> {{ sheet.summary }}</p>
+        {% endif %}
+
+        {% if sheet.tab_names %}
+        <p style="margin-bottom:.25rem;font-size:.85em;color:#555"><strong>Tabs found in this spreadsheet:</strong></p>
+        <div style="display:flex;flex-wrap:wrap;gap:.3rem;margin-bottom:.25rem">
+          {% for tab in sheet.tab_names %}
+          <span class="badge badge-green" style="font-size:.8em;background:#e8f5e9;color:#2e7d32;border:1px solid #a5d6a7">{{ tab }}</span>
+          {% endfor %}
+        </div>
+        {% endif %}
+
+      </div>
+    </div>
+    {% endfor %}
+
+    <p style="margin-top:.75rem;font-size:.85em;color:#666">
+      <i class="fas fa-sync-alt"></i>
+      Diagnostics are run fresh each time you load this page.
+      <a href="{{ url_for('admin_google_sheets_status') }}">Refresh</a> after making changes.
+    </p>
+  </div>
+</div>
+
+<div class="card mb-3">
+  <div class="card-header"><i class="fas fa-question-circle"></i> Why is my data not showing?</div>
+  <div class="card-body">
+    <p>Look at the <strong>Tabs found</strong> list above for each spreadsheet.
+    Compare them to the expected tab names below.  If they don't match, either
+    rename the tabs in Google Sheets <em>or</em> update the mapping in
+    <code>google_sheets.py</code> → <code>_BALANCE_SHEET_MONTH_SHEETS</code>.</p>
+
+    <h5 style="margin-top:1rem">Expected tab names</h5>
+    <table class="data-table" style="font-size:.85em">
+      <thead><tr><th>Spreadsheet</th><th>Expected tab name(s)</th><th>Used for</th></tr></thead>
+      <tbody>
+        <tr><td>Monthly Contribution</td><td><code>Sheet1</code></td><td>Flat contribution amounts</td></tr>
+        <tr><td>Balance Sheet</td><td><code>25-26 Report</code></td><td>2025-26 monthly income/expense summary</td></tr>
+        <tr><td>Balance Sheet</td><td><code>2024-25 Report</code></td><td>2024-25 monthly income/expense summary</td></tr>
+        <tr><td>Balance Sheet</td><td><code>Apr 25</code>, <code>May 25</code>, … <code>March 2026</code></td><td>Per-month detail rows</td></tr>
+        <tr><td>Balance Sheet</td><td><code>April24</code>, <code>May24</code>, … <code>Mar 25</code></td><td>Per-month detail rows (2024-25)</td></tr>
+        <tr><td>Cr Dr</td><td><code>Jul 2024</code>, <code>Aug 2024</code>, … (any "Month Year" format)</td><td>Transaction rows</td></tr>
+      </tbody>
+    </table>
+
+    <p style="margin-top:.75rem;font-size:.9em">
+      <strong>Tip:</strong> Tab names are matched <em>case-insensitively</em> with whitespace stripped,
+      so <code>apr 25</code> and <code>Apr 25 </code> both work.
+      Compact formats like <code>Jul24</code> are also recognised for Cr Dr tabs.
+    </p>
+  </div>
+</div>
+{% endif %}
+
+<div class="card mb-3">
+  <div class="card-header"><i class="fas fa-info-circle"></i> Quick-start: Step&nbsp;5 – How to set these variables</div>
+  <div class="card-body">
+    <p>The easiest method is to edit the startup script you already use to launch the app:</p>
+
+    <h4 style="margin-top:1rem"><i class="fab fa-windows"></i> Windows – <code>start.bat</code></h4>
+    <ol>
+      <li>Right-click <strong>start.bat</strong> → <em>Edit</em> (opens in Notepad).</li>
+      <li>Find the block that starts with <code>REM set GOOGLE_SHEETS_CREDENTIALS_FILE=PASTE_…</code></li>
+      <li>Remove <code>REM&nbsp;</code> from the beginning of each of the five lines.</li>
+      <li>Replace the <code>PASTE_…</code> placeholder on each line with your real value.</li>
+      <li>Save the file, then double-click <strong>start.bat</strong> to launch the app.</li>
+    </ol>
+
+    <h4 style="margin-top:1rem"><i class="fab fa-windows"></i> Windows – <code>start.ps1</code></h4>
+    <ol>
+      <li>Open <strong>start.ps1</strong> in Notepad or VS Code.</li>
+      <li>Find the five lines starting with <code># $env:GOOGLE_…</code></li>
+      <li>Remove the <code>#&nbsp;</code> from the start of each line.</li>
+      <li>Replace the <code>PASTE_…</code> placeholder on each line with your real value.</li>
+      <li>Save and run the script.</li>
+    </ol>
+
+    <h4 style="margin-top:1rem"><i class="fab fa-linux"></i> Linux / macOS – <code>start.sh</code></h4>
+    <ol>
+      <li>Open <strong>start.sh</strong> in a text editor.</li>
+      <li>Find the five lines starting with <code># export GOOGLE_…</code></li>
+      <li>Remove the <code>#&nbsp;</code> from the start of each line.</li>
+      <li>Replace the <code>PASTE_…</code> placeholder on each line with your real value.</li>
+      <li>Run <code>bash start.sh</code>.</li>
+    </ol>
+
+    <h4 style="margin-top:1rem"><i class="fas fa-file-alt"></i> How to find your Spreadsheet ID</h4>
+    <p>Open each Google Sheet in your browser. The URL looks like:</p>
+    <pre style="background:#f4f4f4;padding:.75rem;border-radius:4px;font-size:.85em">https://docs.google.com/spreadsheets/d/<strong>1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms</strong>/edit</pre>
+    <p>The bold part between <code>/d/</code> and <code>/edit</code> is the Spreadsheet ID. Copy it for each sheet.</p>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header"><i class="fas fa-book-open"></i> Full setup guide</div>
+  <div class="card-body">
+    <p>
+      The complete step-by-step guide (Steps 1–7) is in
+      <strong><a href="https://github.com/kiranmsteam/Apartment/blob/main/GOOGLE_SETUP.md#step-5--set-environment-variables" target="_blank">GOOGLE_SETUP.md</a></strong>
+      in the repository.
+    </p>
+    <ol style="line-height:2">
+      <li>Create a Google Cloud Project and enable the <em>Google Sheets API</em> and <em>Google Drive API</em>.</li>
+      <li>Create a <strong>Service Account</strong> and download its JSON key file.</li>
+      <li>Upload your three Excel files to Google Drive and convert them to Google Sheets.</li>
+      <li>Create a blank Google Sheet for user credentials and share it with the service account (Step 5U in <strong>GOOGLE_SETUP.md</strong>).</li>
+      <li>Share the financial spreadsheets with the service account e-mail (set role to <em>Editor</em>).</li>
+      <li><strong>Set the five environment variables above</strong> (see instructions above).</li>
+      <li>Install dependencies: <code>pip install -r requirements.txt</code></li>
+      <li>Restart the app and come back to this page — it should show <em>Connected</em> and all diagnostics green.</li>
+    </ol>
+  </div>
+</div>
+{% endblock %}
+

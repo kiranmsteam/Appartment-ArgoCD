@@ -1,0 +1,60 @@
+# Python
+**/__pycache__/
+__pycache__/
+*.py[cod]
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual environments
+venv/
+.venv/
+env/
+.env
+
+# Runtime data (auto-generated on first run)
+data/
+Apartment/uploads/
+Apartment/announcement_uploads/
+
+# Google Sheets service-account credentials — NEVER commit these
+*service_account*.json
+*credentials*.json
+*-key.json
+google_credentials/
+
+# Gunicorn runtime files
+gunicorn.ctl
+gunicorn.pid
+
+# Flask
+instance/
+*.db
+*.sqlite
+*.sqlite3
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Docker
+.fly/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Node (used to download vendor assets)
+node_modules/
+package-lock.json
+package.json

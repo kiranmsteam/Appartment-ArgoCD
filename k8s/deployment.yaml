@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: apartment-app-deployment
+  namespace: apartment-app
+  labels:
+    app: apartment-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: apartment-app
+  template:
+    metadata:
+      labels:
+        app: apartment-app
+    spec:
+      containers:
+      - name: apartment-app
+        image: apartment-app:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8080
+        resources:
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+          requests:
+            cpu: "100m"
+            memory: "256Mi"
+        env:
+        - name: PORT
+          value: "8080"

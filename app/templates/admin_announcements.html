@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% block title %}Admin – Announcements{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h2><i class="fas fa-bullhorn"></i> Announcements</h2>
+</div>
+
+<!-- Post new announcement -->
+<div class="card mb-3">
+  <div class="card-header"><i class="fas fa-plus"></i> Post New Announcement</div>
+  <div class="card-body">
+    <form method="post" enctype="multipart/form-data">
+      <input type="hidden" name="action" value="post" />
+      <div class="form-group">
+        <label>Title</label>
+        <input type="text" name="title" required placeholder="Announcement title" />
+      </div>
+      <div class="form-group">
+        <label>Content</label>
+        <textarea name="content" required rows="4" placeholder="Write the announcement details here..."></textarea>
+      </div>
+      <div class="form-group">
+        <label>Attachment <span class="text-muted" style="font-weight:normal;font-size:.85em">(optional – any file type)</span></label>
+        <input type="file" name="attachment" />
+      </div>
+      <button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane"></i> Post Announcement</button>
+    </form>
+  </div>
+</div>
+
+<!-- Existing announcements -->
+{% if announcements %}
+<div class="card">
+  <div class="card-header"><i class="fas fa-list"></i> All Announcements ({{ announcements|length }})</div>
+  <div class="card-body p-0">
+    {% for ann in announcements %}
+    <div class="announcement-item bordered">
+      <div class="ann-row">
+        <div>
+          <div class="ann-title">{{ ann.title }}</div>
+          <div class="ann-meta"><i class="fas fa-calendar"></i> {{ ann.date }} | <i class="fas fa-user"></i> {{ ann.author }}</div>
+          <div class="ann-content">{{ ann.content }}</div>
+          {% if ann.attachment %}
+          <div class="ann-attachment" style="margin-top:.4rem">
+            <i class="fas fa-paperclip"></i>
+            <a href="{{ url_for('announcement_attachment', filename=ann.attachment) }}" target="_blank">{{ ann.attachment }}</a>
+          </div>
+          {% endif %}
+        </div>
+        <form method="post" onsubmit="return confirm('Delete this announcement?')">
+          <input type="hidden" name="action" value="delete" />
+          <input type="hidden" name="ann_id" value="{{ ann.id }}" />
+          <button type="submit" class="btn btn-sm btn-danger"><i class="fas fa-trash"></i></button>
+        </form>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% else %}
+<div class="empty-state">
+  <i class="fas fa-bell-slash fa-3x"></i>
+  <p>No announcements posted yet.</p>
+</div>
+{% endif %}
+{% endblock %}

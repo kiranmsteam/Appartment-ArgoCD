@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block title %}Announcements{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h2><i class="fas fa-bell"></i> Announcements & Notifications</h2>
+</div>
+
+{% if announcements %}
+  {% for ann in announcements %}
+  <div class="card mb-2">
+    <div class="card-header announcement-header">
+      <span><i class="fas fa-bullhorn"></i> {{ ann.title }}</span>
+      <span class="ann-meta">{{ ann.date }} | {{ ann.author }}</span>
+    </div>
+    <div class="card-body">
+      <p>{{ ann.content }}</p>
+      {% if ann.attachment %}
+      <p><i class="fas fa-paperclip"></i>
+        <a href="{{ url_for('announcement_attachment', filename=ann.attachment) }}" target="_blank">{{ ann.attachment }}</a>
+      </p>
+      {% endif %}
+    </div>
+  </div>
+  {% endfor %}
+{% else %}
+<div class="empty-state">
+  <i class="fas fa-bell-slash fa-3x"></i>
+  <p>No announcements at this time.</p>
+</div>
+{% endif %}
+{% endblock %}

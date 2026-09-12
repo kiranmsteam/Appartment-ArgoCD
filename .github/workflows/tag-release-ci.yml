@@ -1,0 +1,58 @@
+name: Tag-Based GitOps Release (Helm Update)
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: kiranmsteam/apartment-app
+
+jobs:
+  build-and-deploy-tag:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Extract Tag Version
+        id: get_version
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/}
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "Building image version: $VERSION"
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and Push Docker Image with Tag
+        uses: docker/build-push-action@v5
+        with:
+          context: ./app
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.VERSION }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+
+      - name: Update Helm values.yaml in GitOps Repo
+        run: |
+          cd helm-chart/apartment-app
+          sed -i "s/tag:.*/tag: \"${{ env.VERSION }}\"/g" values.yaml
+          sed -i "s|repository:.*|repository: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}|g" values.yaml
+
+      - name: Commit and Push Helm Chart Changes
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add helm-chart/apartment-app/values.yaml
+          git diff-index --quiet HEAD || git commit -m "chore(release): bump helm image tag to ${{ env.VERSION }}"
+          git push

@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% block title %}Admin – Upload Balance Sheet{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h2><i class="fas fa-upload"></i> Upload Balance Sheet</h2>
+  <p class="text-muted">Upload new monthly balance sheet (.xlsx or .xls files)</p>
+</div>
+
+<div class="card mb-3">
+  <div class="card-header"><i class="fas fa-file-upload"></i> Upload File</div>
+  <div class="card-body">
+    <form method="post" enctype="multipart/form-data">
+      <div class="form-group">
+        <label>Select Excel File</label>
+        <input type="file" name="file" accept=".xlsx,.xls" required />
+      </div>
+      <button type="submit" class="btn btn-primary"><i class="fas fa-upload"></i> Upload</button>
+    </form>
+  </div>
+</div>
+
+{% if uploaded_files %}
+<div class="card">
+  <div class="card-header"><i class="fas fa-folder-open"></i> Uploaded Files ({{ uploaded_files|length }})</div>
+  <div class="card-body p-0">
+    <table class="data-table">
+      <thead>
+        <tr><th>#</th><th>File Name</th></tr>
+      </thead>
+      <tbody>
+        {% for f in uploaded_files %}
+        <tr>
+          <td>{{ loop.index }}</td>
+          <td><i class="fas fa-file-excel text-green"></i> {{ f }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% else %}
+<div class="empty-state">
+  <i class="fas fa-folder-open fa-3x"></i>
+  <p>No files uploaded yet.</p>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% block title %}All Transactions{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h2><i class="fas fa-exchange-alt"></i> All Transactions</h2>
+  <p class="text-muted">{{ transactions|length }} records — latest first</p>
+</div>
+
+<div class="filter-row mb-2">
+  <div class="form-inline">
+    <label><i class="fas fa-calendar-alt"></i> Month:</label>
+    <select id="monthSelect" onchange="location.href=this.value" class="form-control-sm">
+      <option value="{{ url_for('admin_transactions') }}" {% if not selected_month %}selected{% endif %}>
+        — All months —
+      </option>
+      {% for m in available_months %}
+      <option value="{{ url_for('admin_transactions', month=m) }}"
+              {% if m == selected_month %}selected{% endif %}>
+        {{ m }}
+      </option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="table-filter">
+    <input type="text" id="txSearch" placeholder="🔍 Search by apartment, name..." class="search-input" />
+  </div>
+</div>
+
+{% if transactions %}
+<div class="table-responsive">
+  <table class="data-table" id="txTable">
+    <thead>
+      <tr>
+        <th>Month</th>
+        <th>Date</th>
+        <th>Apartment</th>
+        <th>Description</th>
+        <th class="text-right">Debit (₹)</th>
+        <th class="text-right">Credit (₹)</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for tx in transactions %}
+      <tr>
+        <td>{{ tx.month }}</td>
+        <td>{{ tx.date or '—' }}</td>
+        <td><span class="apt-badge">{{ tx.apartment }}</span></td>
+        <td>{{ tx.name or '—' }}</td>
+        <td class="text-right text-red">{% if tx.debit %}{{ "{:,.0f}".format(tx.debit|float) }}{% else %}—{% endif %}</td>
+        <td class="text-right text-green">{% if tx.credit %}{{ "{:,.0f}".format(tx.credit|float) }}{% else %}—{% endif %}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="empty-state">
+  <i class="fas fa-exchange-alt fa-3x"></i>
+  <p>No transactions found.</p>
+</div>
+{% endif %}
+
+<script>
+document.getElementById('txSearch').addEventListener('input', function() {
+  var q = this.value.toLowerCase();
+  document.querySelectorAll('#txTable tbody tr').forEach(function(row) {
+    row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+});
+</script>
+{% endblock %}

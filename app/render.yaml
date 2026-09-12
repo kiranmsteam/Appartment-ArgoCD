@@ -1,0 +1,33 @@
+# render.yaml – Render.com deployment configuration
+# Documentation: https://render.com/docs/blueprint-spec
+#
+# How to use:
+#   1. Push this repo to GitHub.
+#   2. Go to https://render.com → New → Blueprint.
+#   3. Connect your GitHub repo — Render will find this file automatically.
+#   4. Set the required environment variables listed below in the Render dashboard.
+
+services:
+  - type: web
+    name: apartment-mgmt
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app --timeout 120
+    envVars:
+      # ── Required for Google Sheets integration ────────────────────────────
+      # Paste the *entire contents* of your service-account JSON key file
+      # into the GOOGLE_SHEETS_CREDENTIALS_JSON secret in the Render dashboard
+      # (Environment tab → Add Secret File or Secret variable).
+      - key: GOOGLE_SHEETS_CREDENTIALS_JSON
+        sync: false          # set manually in the Render dashboard
+      - key: GOOGLE_SHEET_CONTRIBUTIONS_ID
+        sync: false
+      - key: GOOGLE_SHEET_BALANCE_ID
+        sync: false
+      - key: GOOGLE_SHEET_CRDR_ID
+        sync: false
+      # ── App settings ──────────────────────────────────────────────────────
+      - key: SECRET_KEY
+        generateValue: true  # Render generates a secure random value
+      - key: FLASK_DEBUG
+        value: "false"

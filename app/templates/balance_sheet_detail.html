@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% block title %}Balance Sheet – {{ display_month }}{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h2><i class="fas fa-file-invoice-dollar"></i> {{ display_month }} — Detailed Balance Sheet</h2>
+  <p class="text-muted">FY {{ fy }}</p>
+</div>
+
+<div class="mb-3">
+  <a href="javascript:history.back()" class="btn btn-outline btn-sm">
+    <i class="fas fa-arrow-left"></i> Back
+  </a>
+</div>
+
+{% if rows %}
+<div class="table-responsive">
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th style="width:130px">Date</th>
+        <th>Description</th>
+        <th class="text-right">Income / Balance (₹)</th>
+        <th class="text-right">Expense (₹)</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in rows %}
+      <tr {% if r.description in ['Sub Total','Total of A','Total of B','Total of C',
+                                   'Closing Balance (A-B)','Closing Balance','Cash in Hand',
+                                   'Balance in Bank with Corpus Amount'] %}
+          class="subtotal-row"{% endif %}>
+        <td class="text-muted" style="font-size:.85em">{{ r.date or '' }}</td>
+        <td>{{ r.description }}</td>
+        <td class="text-right {% if r.income is not none %}text-green{% endif %}">
+          {% if r.income is not none %}{{ "{:,.2f}".format(r.income) }}{% endif %}
+        </td>
+        <td class="text-right {% if r.expense is not none %}text-red{% endif %}">
+          {% if r.expense is not none %}{{ "{:,.2f}".format(r.expense) }}{% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="empty-state">
+  <i class="fas fa-file-invoice-dollar fa-3x"></i>
+  <p>No detail data available for {{ display_month }}.</p>
+</div>
+{% endif %}
+{% endblock %}
