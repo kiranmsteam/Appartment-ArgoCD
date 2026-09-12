@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: {{ .Chart.Name }}
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - containerPort: {{ .Values.service.port }}
@@ -28,3 +28,9 @@ spec:
               value: {{ .Values.env.port | quote }}
             - name: ENVIRONMENT
               value: {{ .Values.env.envName | quote }}
+            - name: GOOGLE_SHEETS_CREDENTIALS_FILE
+              value: {{ .Values.env.googleSheetsCredentialsFile | quote }}
+            - name: GOOGLE_SHEET_BALANCE_ID
+              value: {{ .Values.env.googleSheetBalanceId | quote }}
+            - name: GOOGLE_SHEET_CRDR_ID
+              value: {{ .Values.env.googleSheetCrdrId | quote }}
