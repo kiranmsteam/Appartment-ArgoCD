@@ -32,8 +32,17 @@ spec:
         - name: PORT
           value: "8080"
         - name: GOOGLE_SHEETS_CREDENTIALS_FILE
-          value: "hitech-citadel-965501da1a49.json"
+          value: "/app/hitech-citadel-965501da1a49.json"
         - name: GOOGLE_SHEET_BALANCE_ID
           value: "1Mi-75vRlh8NMTrtrZoe9ionJL3LLFPyULzVtWRgHohg"
         - name: GOOGLE_SHEET_CRDR_ID
           value: "1Gm8MZhpuaJHG7BGbxsm0uf2eNFSy-hLR4wTai67uRyY"
+        volumeMounts:
+        - name: gcp-creds
+          mountPath: /app/hitech-citadel-965501da1a49.json
+          subPath: hitech-citadel-965501da1a49.json
+          readOnly: true
+      volumes:
+      - name: gcp-creds
+        secret:
+          secretName: gcp-credentials
