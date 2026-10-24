@@ -11,4 +11,4 @@ resources:
 images:
   - name: apartment-app
     newName: ghcr.io/kiranmsteam/apartment-app
-    newTag: sha-624a6e7
+    newTag: sha-3aea2af
