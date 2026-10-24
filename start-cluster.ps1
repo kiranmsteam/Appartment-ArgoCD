@@ -37,7 +37,7 @@ Write-Host "`n2. Ensuring file permissions and Starting Minikube Cluster..." -Fo
 try {
     icacls "$env:USERPROFILE\.minikube" /grant "${env:USERNAME}:(OI)(CI)F" /q 2>$null
 } catch {}
-& "$PSScriptRoot\bin\minikube.exe" start --driver=hyperv
+& "$PSScriptRoot\bin\minikube.exe" start --driver=hyperv --force
 
 Write-Host "`n3. Checking Cluster Status..." -ForegroundColor Yellow
 & "$PSScriptRoot\bin\kubectl.exe" get nodes
