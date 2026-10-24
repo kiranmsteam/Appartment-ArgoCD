@@ -20,3 +20,5 @@ hitech-citadel-*.json
 .DS_Store
 .vscode/
 .idea/
+
+.pass
