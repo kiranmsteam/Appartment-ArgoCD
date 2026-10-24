@@ -89,6 +89,48 @@ ArgoCD will automatically watch the `k8s/` directory in your GitHub repo and dep
 ## 🌐 Accessing Your Apartment Application
 Once deployed by ArgoCD, access the app via Minikube service or port forward:
 ```powershell
-.\bin\kubectl.exe port-forward svc/apartment-app-service -n apartment-app 8080:8080
+.\bin\kubectl.exe port-forward svc/apartment-app-service -n apartment-app 8081:8080
 ```
-Open **http://localhost:8080** in your browser.
+Open **http://localhost:8081** in your browser.
+
+---
+
+## 📊 Monthly Balance Sheet Generator (`generate_monthly_balance_sheet.py`)
+
+Whenever a new month ends and transactions are recorded in the `Cr Dr` Google Sheet, you can automatically generate and format the new monthly balance sheet tab in Google Sheets using the automated generator.
+
+### What it does:
+1. **Reads Previous Month Balances**: Automatically looks up the prior month's tab in the `Current Balance Sheet` and carries forward the bank opening balance and cash in hand.
+2. **Aggregates Current Month Transactions**: Reads maintenance contributions, bank interest, cheque/online payments (consolidating multi-meter BESCOM entries), and cash expenses from the corresponding tab in the `Cr Dr` Google Sheet.
+3. **Builds & Styles New Tab**: Creates and formats the monthly sheet (e.g. `Sep 2026`) with all formulas (`Total of A`, `Total of B`, `Total of C`, `Closing Balance`), styling, colors, and borders.
+4. **Instant Web App Sync**: The web app detects the new tab immediately under the relevant Financial Year without requiring any app restart.
+
+---
+
+### How to Run:
+
+#### Option 1: Inside Kubernetes (Recommended - No local Python or dependency setup needed)
+Run this command directly from your `C:\K8-ArgoCD` terminal:
+```powershell
+.\bin\kubectl.exe exec -n apartment-app deploy/apartment-app-deployment -- python /app/generate_monthly_balance_sheet.py --month <MonthName> --year <Year>
+```
+
+**Examples:**
+```powershell
+# For September 2026:
+.\bin\kubectl.exe exec -n apartment-app deploy/apartment-app-deployment -- python /app/generate_monthly_balance_sheet.py --month September --year 2026
+
+# For October 2026:
+.\bin\kubectl.exe exec -n apartment-app deploy/apartment-app-deployment -- python /app/generate_monthly_balance_sheet.py --month October --year 2026
+```
+
+---
+
+#### Option 2: Running Locally via Python
+If running directly on your Windows host machine:
+```powershell
+cd C:\K8-ArgoCD\app
+python generate_monthly_balance_sheet.py --month September --year 2026
+```
+*(Requires `Apartment.env` loaded and dependencies installed via `pip install gspread google-auth`)*
+

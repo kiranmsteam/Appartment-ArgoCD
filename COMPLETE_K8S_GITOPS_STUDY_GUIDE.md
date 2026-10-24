@@ -360,4 +360,7 @@ Create local Kubernetes secrets on your laptop out-of-band:
 
 # Port-Forward ArgoCD UI -> https://localhost:8080
 .\bin\kubectl.exe port-forward svc/argocd-server -n argocd 8080:443
+
+# Generate Monthly Balance Sheet in Google Sheets (e.g. September 2026)
+.\bin\kubectl.exe exec -n apartment-app deploy/apartment-app-deployment -- python /app/generate_monthly_balance_sheet.py --month September --year 2026
 ```
