@@ -21,6 +21,7 @@ c:\K8-ArgoCD\
 ├── argocd/                   # ArgoCD Configuration
 │   └── application.yaml      # ArgoCD Custom Resource defining app & Git sync
 ├── start-cluster.ps1         # Script to launch local Minikube cluster
+├── stop-cluster.ps1          # Script to stop local Minikube cluster
 └── install-argocd.ps1       # Script to install ArgoCD control plane & fetch credentials
 ```
 
@@ -92,6 +93,14 @@ Once deployed by ArgoCD, access the app via Minikube service or port forward:
 .\bin\kubectl.exe port-forward svc/apartment-app-service -n apartment-app 8081:8080
 ```
 Open **http://localhost:8081** in your browser.
+
+---
+
+## 🛑 Stopping the Local Cluster
+When you are done working, you can gracefully shut down the Minikube cluster and Hyper-V VM:
+```powershell
+.\stop-cluster.ps1
+```
 
 ---
 

@@ -38,6 +38,10 @@ try {
     icacls "$env:USERPROFILE\.minikube" /grant "${env:USERNAME}:(OI)(CI)F" /q 2>$null
 } catch {}
 & "$PSScriptRoot\bin\minikube.exe" start --driver=hyperv --force
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "`nMinikube failed to start. If it was stuck or corrupted, try running: .\bin\minikube.exe delete" -ForegroundColor Red
+    exit $LASTEXITCODE
+}
 
 Write-Host "`n3. Checking Cluster Status..." -ForegroundColor Yellow
 & "$PSScriptRoot\bin\kubectl.exe" get nodes
